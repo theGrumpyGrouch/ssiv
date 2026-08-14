@@ -50,8 +50,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  // font = TTF_OpenFont("/Library/Fonts/Arial Unicode.ttf", 12.0f);
-  font = TTF_OpenFont("/usr/share/fonts/AdwaitaMono-Regular.ttf", 12.0f);
+  font = TTF_OpenFont("/Library/Fonts/Arial Unicode.ttf", 12.0f);
+  // font = TTF_OpenFont("/usr/share/fonts/Adwaita/AdwaitaMono-Regular.ttf", 12.0f);
   if (!font) {
     SDL_Log("Couldn't Open Font: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;

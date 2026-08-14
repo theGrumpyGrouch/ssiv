@@ -11,6 +11,8 @@ all: $(TARGET)
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+tar: 
+	tar -cf ssiv.tar *.c *.h libs Makefile
 clean:
 	rm -f $(TARGET)
 
