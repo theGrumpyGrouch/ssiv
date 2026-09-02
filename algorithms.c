@@ -1,8 +1,8 @@
 #include <SDL3/SDL_filesystem.h>
 #include <stdio.h>
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "ssiv.h"
 #include "libs/stb_image_resize2.h"
+#include "ssiv.h"
 
 int clamp(int val, int min, int max) {
   if (val < min)
@@ -13,25 +13,31 @@ int clamp(int val, int min, int max) {
 }
 
 Uint8 linear_interpolation(Uint8 a, Uint8 b, float t) {
-  return floor(a + (t * (b - a)));
+  float val = floor(a + (t * (b - a)));
+  return clamp((int)round(val), 0, 255);
 }
 
 Uint32 color_linear_interpolate(Uint32 a, Uint32 b, float t) {
-  Uint8 a_red_channel = a >> 24;
-  Uint8 a_blue_channel = a >> 16;
-  Uint8 a_green_channel = a >> 8;
-  Uint8 a_alpha_channel = a;
+  Uint8 a_alpha_channel = a >> 24; // Alpha
+  Uint8 a_red_channel = a >> 16;   // Red
+  Uint8 a_green_channel = a >> 8;  // Green
+  Uint8 a_blue_channel = a;        // Blue
 
-  Uint8 b_red_channel = b >> 24;
-  Uint8 b_blue_channel = b >> 16;
-  Uint8 b_green_channel = b >> 8;
-  Uint8 b_alpha_channel = b;
-
+  Uint8 b_alpha_channel = b >> 24; // Alpha
+  Uint8 b_red_channel = b >> 16;   // Red
+  Uint8 b_green_channel = b >> 8;  // Green
+  Uint8 b_blue_channel = b;        // Blue
+                                   //
   Uint8 final_color[4];
-  final_color[3] = linear_interpolation(a_red_channel, b_red_channel, t);
-  final_color[2] = linear_interpolation(a_green_channel, b_green_channel, t);
-  final_color[1] = linear_interpolation(a_blue_channel, b_blue_channel, t);
-  final_color[0] = linear_interpolation(a_alpha_channel, b_alpha_channel, t);
+  final_color[0] =
+      linear_interpolation(a_alpha_channel, b_alpha_channel, t); // Alpha
+  final_color[1] = linear_interpolation(a_red_channel, b_red_channel, t); // Red
+  final_color[2] =
+      linear_interpolation(a_green_channel, b_green_channel, t); // Green
+  final_color[3] =
+      linear_interpolation(a_blue_channel, b_blue_channel, t); // Blue
+  // printf("A Color 0x%08X\n", a);
+  // printf("B Color 0x%08X\n", b);
 
   return *(Uint32 *)final_color;
 }
@@ -68,8 +74,9 @@ Uint32 color_bilinear_interpolation(SDL_Surface *src, float src_x,
   return final_color;
 }
 
-SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height) {
-  SDL_Surface *dst = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA8888);
+SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height,
+                                    int pos) {
+  SDL_Surface *dst = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_ARGB8888);
 
   SDL_LockSurface(src);
   SDL_LockSurface(dst);
@@ -77,14 +84,26 @@ SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height) {
   int dst_pitch = dst->pitch;
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
-      float src_x = ((float)x / (float)(width - 1)) * (src->w - 1);
-      float src_y = ((float)y / (float)(height - 1)) * (src->h - 1);
+      // float src_x = ((float)x / (float)(width - 1)) * (src->w - 1);
+      // float src_y = ((float)y / (float)(height - 1)) * (src->h - 1);
+      float src_x = (x + 0.5f) * ((float)src->w / (float)width) - 0.5f;
+      float src_y = (y + 0.5f) * ((float)src->h / (float)height) - 0.5f;
+      // printf("src_x %f \n src_y %f\n", src_x, src_y);
       Uint32 color = color_bilinear_interpolation(src, src_x, src_y);
       dst_pixels[y * (dst_pitch / 4) + x] = color;
     }
   }
   SDL_UnlockSurface(src);
   SDL_UnlockSurface(dst);
+
+  char *userPath = getenv("HOME"); // MacOS
+  char *path;
+
+  assert(asprintf(&path, "%s/.cache/ssiv/%s", userPath, base_path));
+  assert(SDL_CreateDirectory(path) == true);
+  assert(asprintf(&path, "%s%s%s%s", userPath, "/.cache/ssiv/", base_path,
+                  filenames[pos]) != 1);
+  // IMG_SaveJPG(dst, path, 100);
 
   return dst;
 }
@@ -103,12 +122,13 @@ SDL_Surface *scale_surface_stb(SDL_Surface *src, int width, int height,
 
   SDL_UnlockSurface(resized_src);
 
-  char *userPath = getenv("HOME"); //MacOS
+  char *userPath = getenv("HOME"); // MacOS
   char *path;
 
   assert(asprintf(&path, "%s/.cache/ssiv/%s", userPath, base_path));
   assert(SDL_CreateDirectory(path) == true);
-  assert(asprintf(&path, "%s%s%s%s", userPath, "/.cache/ssiv/", base_path, filenames[pos]) != 1);
+  assert(asprintf(&path, "%s%s%s%s", userPath, "/.cache/ssiv/", base_path,
+                  filenames[pos]) != 1);
   IMG_SaveJPG(resized_src, path, 100);
 
   return resized_src;

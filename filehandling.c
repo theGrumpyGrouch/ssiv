@@ -50,7 +50,7 @@ SDL_AppResult find_files() {
     const char *ext = strrchr(entry->d_name, '.');
     if (!ext || !(strcmp(ext, ".png") == 0 || strcmp(ext, ".jpg") == 0 ||
                   strcmp(ext, ".jpeg") == 0))
-      continue; 
+      continue;
 
     if (filenames_size >= filenames_capacity) {
       filenames_capacity =
@@ -65,7 +65,7 @@ SDL_AppResult find_files() {
   closedir(dp);
 
   if (filenames_size == 0) {
-    printf("No Images to Display\n");
+    printf("ssiv: No Images to Display\n");
     return SDL_APP_FAILURE;
   }
 
@@ -79,7 +79,7 @@ void *load_thumbnail_Surface(void *args) {
     return NULL;
   }
 
-  char *userPath = getenv("HOME"); //MACOS
+  char *userPath = getenv("HOME");
   char *fullpath;
   if (SDL_asprintf(&fullpath, "%s/.cache/ssiv/%s%s", userPath, base_path,
                    filenames[img_pos]) < 0) {
@@ -87,31 +87,53 @@ void *load_thumbnail_Surface(void *args) {
     return NULL;
   }
 
-  if (SDL_IOFromFile(fullpath, "r") != NULL) {
-    SDL_Surface *tmp = IMG_Load(fullpath);
-    free(fullpath);
-    tmp = SDL_ConvertSurface(tmp, SDL_PIXELFORMAT_RGBA8888);
-    thumbnail_Surfaces[img_pos] = tmp;
-    return NULL;
-  }
-
   char *path;
   SDL_asprintf(&path, "%s%s", base_path, filenames[img_pos]);
+
   if (path == NULL) {
     printf("sxiv: allocation failed\n");
     return NULL;
   }
 
-  if (thumbnail_Surfaces[img_pos] != NULL) {
+  if (SDL_IOFromFile(fullpath, "r") != NULL) { // Cache of thumbnail exists
+    struct stat file_status;
+    struct stat cache_file_status;
+
+    stat(path, &file_status);
+    stat(fullpath, &cache_file_status);
+
+    if (file_status.st_mtim.tv_sec > cache_file_status.st_mtim.tv_sec 
+        || file_status.st_ctim.tv_sec > cache_file_status.st_ctim.tv_sec) {
+      goto SCALE;
+    }
+
+    SDL_Surface *tmp = IMG_Load(fullpath);
+    tmp = SDL_ConvertSurface(tmp, SDL_PIXELFORMAT_RGBA8888);
+
+    if (tmp == NULL) {
+      printf("sxiv: surface creation failed 1, %s\n", path);
+      return NULL;
+    }
+
+    free(path);
+    free(fullpath);
+    thumbnail_Surfaces[img_pos] = tmp;
     return NULL;
   }
+
+SCALE:
+  if (thumbnail_Surfaces[img_pos] != NULL) {
+    printf("sxiv: thumbnail surfaces uninitialized, %s\n", path);
+    return NULL;
+  }
+
   SDL_Surface *tmp = IMG_Load(path);
-  free(path);
   tmp = SDL_ConvertSurface(tmp, SDL_PIXELFORMAT_RGBA8888);
   if (tmp == NULL) {
-    printf("sxiv: surface creation failed 1\n");
+    printf("sxiv: surface creation failed 3, %s\n", path);
     return NULL;
   }
+
   int new_width = ((float)(original_width - 20) / 5) - 8;
   float ratio = (float)new_width / tmp->w;
   int new_height = tmp->h * ratio;
@@ -124,6 +146,8 @@ void *load_thumbnail_Surface(void *args) {
     return NULL;
   }
 
+  free(path);
+  free(fullpath);
   return NULL;
 }
 

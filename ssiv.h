@@ -83,6 +83,7 @@ SDL_AppResult Image_AppEvent(void **appstate, SDL_Event *event);
 SDL_AppResult Draw_StatusBar(void *appstate);
 SDL_AppResult Draw_Thumbnails(void *appstate);
 SDL_AppResult Draw_Image(void *appstate);
+void draw_roundedRect(int x, int y, int w, int h, int r);
 
 // File handling
 SDL_AppResult find_files();
@@ -91,6 +92,6 @@ void *load_thumbnail_Surface(void *args);
 void *render_threads(void *args);
 
 // Algorithms
-SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height);
+SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height, int img_pos);
 SDL_Surface *scale_surface_stb(SDL_Surface *src, int width, int height,
                                int img_pos);

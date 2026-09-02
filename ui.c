@@ -1,5 +1,6 @@
 #include "ssiv.h"
 #include <SDL3/SDL_error.h>
+#include <SDL3/SDL_pixels.h>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_stdinc.h>
 #include <SDL3/SDL_surface.h>
@@ -106,7 +107,7 @@ SDL_AppResult Draw_Image(void *appstate) {
   viewport.w = original_width;
   viewport.h = original_height - 20 - 20;
 
-  SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
+  SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_TRANSPARENT);
   SDL_SetRenderViewport(renderer, &viewport);
   SDL_RenderClear(renderer);
 
@@ -171,7 +172,7 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
 
   float cell_width = (float)(original_width - 20) / 5;
   float cell_height = (float)(original_height - 20) / 4;
-
+  
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
   Draw_StatusBar(appstate);
@@ -220,11 +221,13 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
 
       // Highlight
       if (cursor_pos == img_pos) {
-        SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+        SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, SDL_ALPHA_OPAQUE);
         SDL_RenderFillRect(renderer, &cell_rect);
+        SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00,
+                               SDL_ALPHA_TRANSPARENT);
       }
 
-      // Render the texture
+      // Render the texture  
       SDL_RenderTexture(renderer, thumbnail_Textures[img_pos], NULL, &dst_rect);
     }
   }

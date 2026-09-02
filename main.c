@@ -14,8 +14,6 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   }
 
   base_path = realpath(argv[1], NULL);
-  if (!base_path)
-    return SDL_APP_FAILURE;
   if (argc == 3) {
     if (strcmp(argv[1], "-t") == 0) {
       g_state = THUMBNAILER;
@@ -25,6 +23,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
       return SDL_APP_FAILURE;
     }
     base_path = realpath(argv[2], NULL);
+  } else {
+    base_path = realpath(argv[1], NULL);
+    printf("ssiv: BasePathERROR\n");
+    return SDL_APP_FAILURE;
   }
 
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
@@ -32,17 +34,17 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("Ssiv", original_width, original_height,
+  if (!SDL_CreateWindowAndRenderer("Ssiv", 820, 620,
                                    SDL_WINDOW_HIGH_PIXEL_DENSITY |
-                                       SDL_WINDOW_BORDERLESS,
+                                       SDL_WINDOW_BORDERLESS | SDL_WINDOW_TRANSPARENT,
                                    &window, &renderer)) {
     printf("Failed: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
   SDL_SetRenderVSync(renderer, 1);
 
-  SDL_SetRenderLogicalPresentation(renderer, original_width, original_height,
-                                   SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
+  // SDL_SetRenderLogicalPresentation(renderer, original_width, original_height,
+  //                                  SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
   SDL_SetAppMetadata("Simple SDL Image Viewer", "0.1", "com.everyway.ssiv");
 
   if (!TTF_Init()) {
@@ -50,8 +52,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  font = TTF_OpenFont("/Library/Fonts/Arial Unicode.ttf", 12.0f);
-  // font = TTF_OpenFont("/usr/share/fonts/Adwaita/AdwaitaMono-Regular.ttf", 12.0f);
+  // font = TTF_OpenFont("/Library/Fonts/Arial Unicode.ttf", 12.0f);
+  font =
+      TTF_OpenFont("/usr/share/fonts/Adwaita/AdwaitaMono-Regular.ttf", 12.0f);
   if (!font) {
     SDL_Log("Couldn't Open Font: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
