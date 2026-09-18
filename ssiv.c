@@ -12,12 +12,12 @@ int original_height = 600;
 int original_width = 800;
 
 // File I/O
-char *base_path = NULL;
-char **filenames = NULL;
-char *filename = NULL;
+photos_t *photos = NULL;
+char** paths = NULL;
+int pathcount = 0;
+int num_photos = 0;
+
 char last_path[4096];
-int filenames_size = 0;
-int filenames_capacity = 0;
 SDL_Color text_color = {0,0,0, SDL_ALPHA_OPAQUE};
 SDL_Texture *text_texture = NULL;
 

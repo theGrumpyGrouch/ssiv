@@ -17,6 +17,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <assert.h>
+#include <bits/getopt_core.h>
 #include <dirent.h>
 #include <math.h>
 #include <pthread.h>
@@ -26,11 +27,19 @@
 
 // Custom Type Definitions
 typedef enum { THUMBNAILER, IMAGE } AppMode;
+
 typedef struct {
-  SDL_Texture **appstate;
+  char *absolute_path;
+  char *filename;
+  char **filenames;
+  int filenames_size;
+  int filenames_capacity;
+} photos_t;
+
+typedef struct {
   int i;
-  int j;
-} texture_context;
+  int k;
+} int_tuple_t;
 
 // Variables
 
@@ -49,12 +58,13 @@ extern SDL_Texture **full_Textures;
 extern SDL_Surface **full_Surfaces;
 
 // File I/O
-extern char *base_path;
+
+extern photos_t *photos; // albums
+extern int num_photos;
+extern char** paths;
+extern int pathcount;
 extern char last_path[4096];
-extern char **filenames;
-extern int filenames_size;
-extern int filenames_capacity;
-extern char *filename;
+
 extern SDL_Color text_color;
 extern SDL_Texture *text_texture;
 
@@ -69,29 +79,33 @@ extern pthread_cond_t cond;
 
 // Functions
 
-// SDL
+/* main.c */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]);
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event);
 SDL_AppResult SDL_AppIterate(void *appstate);
 void SDL_AppQuit(void *appstate, SDL_AppResult result);
 
-// Custom
-
-// Render
+/* ui.c */
 SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event);
 SDL_AppResult Image_AppEvent(void **appstate, SDL_Event *event);
 SDL_AppResult Draw_StatusBar(void *appstate);
 SDL_AppResult Draw_Thumbnails(void *appstate);
 SDL_AppResult Draw_Image(void *appstate);
-void draw_roundedRect(int x, int y, int w, int h, int r);
 
-// File handling
-SDL_AppResult find_files();
+/* filehandling.c */
+SDL_AppResult find_files(int argc, char *argv[]);
 void build_image_textures(void **appstate);
 void *load_thumbnail_Surface(void *args);
 void *render_threads(void *args);
 
-// Algorithms
-SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height, int img_pos);
+/* algorithms.c */
+SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height,
+                                    int_tuple_t img_pos);
 SDL_Surface *scale_surface_stb(SDL_Surface *src, int width, int height,
-                               int img_pos);
+                               int_tuple_t img_pos);
+int_tuple_t find_relative_pos(int cursor_pos);
+
+/* parsing.c */
+void print_usage();
+void print_version();
+void parse_options(int argc, char *argv[]);

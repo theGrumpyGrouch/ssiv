@@ -1,42 +1,20 @@
 #include "ssiv.h"
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_render.h>
-#include <SDL3/SDL_video.h>
-#include <pthread.h>
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   SDL_AppResult retval = SDL_APP_CONTINUE;
   SDL_Surface *text;
 
-  if (argc < 2) {
-    fprintf(stderr, "usage: ssiv [-t] FILES ...\n");
-    return SDL_APP_FAILURE;
-  }
-
-  base_path = realpath(argv[1], NULL);
-  if (argc == 3) {
-    if (strcmp(argv[1], "-t") == 0) {
-      g_state = THUMBNAILER;
-    } else {
-      fprintf(stderr, "ssiv: invalid option %s\n", argv[1]);
-      fprintf(stderr, "usage: ssiv [-t] FILES ...\n");
-      return SDL_APP_FAILURE;
-    }
-    base_path = realpath(argv[2], NULL);
-  } else {
-    base_path = realpath(argv[1], NULL);
-    printf("ssiv: BasePathERROR\n");
-    return SDL_APP_FAILURE;
-  }
+  parse_options(argc, argv);
 
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS)) {
     printf("Failed: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 
-  if (!SDL_CreateWindowAndRenderer("Ssiv", 820, 620,
+  if (!SDL_CreateWindowAndRenderer("Ssiv", 800, 600,
                                    SDL_WINDOW_HIGH_PIXEL_DENSITY |
-                                       SDL_WINDOW_BORDERLESS | SDL_WINDOW_TRANSPARENT,
+                                       SDL_WINDOW_BORDERLESS |
+                                       SDL_WINDOW_TRANSPARENT,
                                    &window, &renderer)) {
     printf("Failed: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
@@ -60,7 +38,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  text = TTF_RenderText_Blended(font, base_path, 0, text_color);
+  text = TTF_RenderText_Blended(font, argv[1], 0,
+                                text_color); // Why base path here?
   if (text) {
     text_texture = SDL_CreateTextureFromSurface(renderer, text);
     SDL_DestroySurface(text);
@@ -71,7 +50,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  retval = find_files();
+  retval = find_files(argc, argv);
 
   if (retval != SDL_APP_CONTINUE)
     return retval;
@@ -81,28 +60,34 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   Draw_StatusBar(appstate);
   SDL_RenderPresent(renderer);
 
-  thumbnail_Textures = malloc(filenames_size * sizeof(SDL_Texture *));
+  int surfaces_size = 0; // TODO Get rid of surfaces size
+  for (int h = 0; h < pathcount; h++) {
+    surfaces_size += photos[h].filenames_size;
+  }
+  num_photos = surfaces_size;
+
+  thumbnail_Textures = malloc(num_photos * sizeof(SDL_Texture *));
   if (!thumbnail_Textures) {
     printf("Texture re-allocation failed!");
     return SDL_APP_FAILURE;
   }
-  thumbnail_Surfaces = malloc(filenames_size * sizeof(SDL_Surface *));
+  thumbnail_Surfaces = malloc(num_photos * sizeof(SDL_Surface *));
   if (!thumbnail_Surfaces) {
     printf("Texture re-allocation failed!");
     return SDL_APP_FAILURE;
   }
-  full_Textures = malloc(filenames_size * sizeof(SDL_Texture *));
+  full_Textures = malloc(num_photos * sizeof(SDL_Texture *));
   if (!full_Textures) {
     printf("Texture re-allocation failed!");
     return SDL_APP_FAILURE;
   }
-  full_Surfaces = malloc(filenames_size * sizeof(SDL_Surface *));
+  full_Surfaces = malloc(num_photos * sizeof(SDL_Surface *));
   if (!full_Surfaces) {
     printf("Texture re-allocation failed!");
     return SDL_APP_FAILURE;
   }
 
-  for (int i = 0; i < filenames_size; i++) {
+  for (int i = 0; i < num_photos; i++) {
     thumbnail_Textures[i] = NULL;
     thumbnail_Surfaces[i] = NULL;
     full_Textures[i] = NULL;
@@ -146,12 +131,18 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
-  // Destroy textures
-  for (int i = 0; i < filenames_size; ++i) {
+  // TODO Destroy textures
+  for (int i = 0; i < num_photos; ++i) {
     SDL_DestroyTexture(thumbnail_Textures[i]);
     SDL_DestroyTexture(full_Textures[i]);
-    free(filenames[i]);
   }
+
+  for (int i = 0; i < pathcount; i++) {
+    for(int j = 0; j < photos[i].filenames_size; j++){
+      free(photos[i].filenames[j]);
+    }
+  }
+  free(photos);
 
   // Closing fonts
   if (font) {

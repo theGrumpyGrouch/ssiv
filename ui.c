@@ -10,6 +10,7 @@
 SDL_AppResult Image_AppEvent(void **appstate, SDL_Event *event) {
   SDL_Keycode key;
   int old_pos = cursor_pos;
+
   switch (event->type) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
@@ -33,8 +34,8 @@ SDL_AppResult Image_AppEvent(void **appstate, SDL_Event *event) {
     else if (key == SDLK_Q)
       return SDL_APP_SUCCESS;
 
-    if (cursor_pos >= filenames_size)
-      cursor_pos = filenames_size - 1;
+    if (cursor_pos >= num_photos)
+      cursor_pos = num_photos - 1;
     else if (cursor_pos < 0)
       cursor_pos = 0;
 
@@ -49,6 +50,7 @@ SDL_AppResult Image_AppEvent(void **appstate, SDL_Event *event) {
 SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event) {
   SDL_Keycode key;
   int old_pos = cursor_pos;
+
   switch (event->type) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
@@ -74,8 +76,8 @@ SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event) {
     else if (key == SDLK_Q)
       return SDL_APP_SUCCESS;
 
-    if (cursor_pos >= filenames_size)
-      cursor_pos = filenames_size - 1;
+    if (cursor_pos >= num_photos)
+      cursor_pos = num_photos - 1;
     else if (cursor_pos < 0)
       cursor_pos = 0;
 
@@ -87,6 +89,29 @@ SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event) {
 
   return SDL_APP_CONTINUE;
 }
+
+// Given Cursor Pos find photo element it belongs to
+// int_tuple_t find_relative_pos(int cursor_pos) {
+//   int total = 0;
+//   int k = 0;
+//   while (total != cursor_pos) {
+//     for (int j = 0; j < photos[k].filenames_size; j++) {
+//       total += 1;
+//     }
+//     k++;
+//   }
+//   int_tuple_t retval;
+//   retval.i = k;
+//   retval.k = 0;
+//   for(int i = 0; i < k - 1; i++) {
+//     for(int j = 0; j < photos[i].filenames_size; j++) {
+//       retval.k += 1;
+//     }
+//   }
+//   retval.k = cursor_pos - retval.k;
+//   return retval;
+// }
+
 // Draw
 SDL_AppResult Draw_Image(void *appstate) {
   if (!need_redraw) {
@@ -97,6 +122,10 @@ SDL_AppResult Draw_Image(void *appstate) {
     SDL_Delay(16);
     return SDL_APP_CONTINUE;
   }
+
+  int_tuple_t photo_loc = find_relative_pos(cursor_pos);
+  photos_t current_photo = photos[photo_loc.i];
+
   int w, h;
   SDL_GetWindowSize(window, &w, &h);
 
@@ -105,7 +134,7 @@ SDL_AppResult Draw_Image(void *appstate) {
   viewport.x = 0;
   viewport.y = 0;
   viewport.w = original_width;
-  viewport.h = original_height - 20 - 20;
+  viewport.h = original_height - 20;
 
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_TRANSPARENT);
   SDL_SetRenderViewport(renderer, &viewport);
@@ -116,7 +145,8 @@ SDL_AppResult Draw_Image(void *appstate) {
     SDL_RenderPresent(renderer);
     if (full_Surfaces[cursor_pos] == NULL) {
       char *path;
-      SDL_asprintf(&path, "%s%s", base_path, filenames[cursor_pos]);
+      SDL_asprintf(&path, "%s%s", current_photo.absolute_path,
+                   current_photo.filenames[photo_loc.k]);
       assert(path != NULL);
       full_Surfaces[cursor_pos] = IMG_Load(path);
       if (full_Surfaces[cursor_pos] == NULL) {
@@ -136,8 +166,10 @@ SDL_AppResult Draw_Image(void *appstate) {
                         full_Textures[cursor_pos]->h};
   SDL_RectToFRect(&viewport, &dst_rect);
 
-  // float ratio = dst_rect.w / full_Textures[cursor_pos]->w;
-  // OLD: dst_rect.h = gTextures[cursor_pos]->h * ratio;
+  /* We . a l w a y s . want to preserve aspect ratio */
+  /* Add if case here for type of filtering (ours or theirs) */
+  float ratio = dst_rect.w / full_Textures[cursor_pos]->w;
+  dst_rect.h = full_Textures[cursor_pos]->h * ratio;
 
   dst_rect.x = (original_width - dst_rect.w) / 2.0f;
   dst_rect.y = (original_height - dst_rect.h) / 2.0f;
@@ -149,6 +181,7 @@ SDL_AppResult Draw_Image(void *appstate) {
   need_redraw = false;
   return SDL_APP_CONTINUE;
 }
+
 SDL_AppResult Draw_Thumbnails(void *appstate) {
   if (!need_redraw) {
     // SDL_Event e;
@@ -158,6 +191,10 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
     SDL_Delay(16);
     return SDL_APP_CONTINUE;
   }
+
+  int_tuple_t photo_loc = find_relative_pos(cursor_pos);
+  photos_t current_photo = photos[photo_loc.i];
+
   int w, h;
   SDL_GetWindowSize(window, &w, &h);
 
@@ -168,16 +205,17 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
   viewport.x = 10;
   viewport.y = 10;
   viewport.w = original_width - 20;
-  viewport.h = original_height - 20 - 20; // Additional 20 for the bar
+  viewport.h = original_height - 20; // Additional 20 for the bar
 
   float cell_width = (float)(original_width - 20) / 5;
   float cell_height = (float)(original_height - 20) / 4;
-  
+
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
   Draw_StatusBar(appstate);
   SDL_SetRenderViewport(renderer, &viewport);
 
+  int album_index = 0;
   int img_pos = 0;
 
   for (int i = 0; i < 4; ++i) {
@@ -185,7 +223,7 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
       offset_pos = ceilf(((float)cursor_pos + 1) / 5) - 4;
       offset_pos = offset_pos <= 0 ? 0 : offset_pos;
       img_pos = j + (5 * i + (5 * offset_pos));
-      if (img_pos >= filenames_size) {
+      if (img_pos >= num_photos) {
         continue;
       }
       if (thumbnail_Textures[img_pos] == NULL) {
@@ -209,9 +247,11 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
 
       dst_rect.w = thumbnail_Textures[img_pos]->w;
       dst_rect.h = thumbnail_Textures[img_pos]->h;
+
+      // Scaling
       // dst_rect.w = cell_rect.w - 8;
-      // float ratio = dst_rect.w / tex_w;
-      // dst_rect.h = tex_h * ratio;
+      // float ratio = dst_rect.w / w;
+      // dst_rect.h = h * ratio;
 
       // Center the image in the cell
       dst_rect.x = cell_rect.x + 4;
@@ -227,16 +267,18 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
                                SDL_ALPHA_TRANSPARENT);
       }
 
-      // Render the texture  
+      // Render the texture
       SDL_RenderTexture(renderer, thumbnail_Textures[img_pos], NULL, &dst_rect);
     }
   }
 
   SDL_RenderPresent(renderer);
-
   return SDL_APP_CONTINUE;
 }
 SDL_AppResult Draw_StatusBar(void *appstate) {
+  int_tuple_t photo_loc = find_relative_pos(cursor_pos);
+  photos_t current_photo = photos[photo_loc.i];
+
   SDL_FRect status_rect;
 
   status_rect.x = 0;
@@ -250,16 +292,16 @@ SDL_AppResult Draw_StatusBar(void *appstate) {
 
   char full_path[4096] = {0};
 
-  strcat(full_path, base_path);
-  strcat(full_path, filenames[cursor_pos]);
+  strcat(full_path, current_photo.absolute_path);
+  strcat(full_path, current_photo.filenames[photo_loc.k]);
 
   if (strcmp(full_path, last_path) != 0) {
     SDL_DestroyTexture(text_texture);
     SDL_Surface *text = TTF_RenderText_Blended(
-        font, filenames[cursor_pos], 0,
+        font, current_photo.filenames[photo_loc.k], 0,
         text_color); /* replace with full_path for full path */
     char *numstatus;
-    SDL_asprintf(&numstatus, "[%d:%d]", cursor_pos + 1, filenames_size);
+    SDL_asprintf(&numstatus, "[%d:%d]", cursor_pos + 1, num_photos);
     SDL_Surface *num = TTF_RenderText_Blended(font, numstatus, 0, text_color);
     if (text) {
       text_texture = SDL_CreateTextureFromSurface(renderer, text);

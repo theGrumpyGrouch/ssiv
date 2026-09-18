@@ -75,7 +75,7 @@ Uint32 color_bilinear_interpolation(SDL_Surface *src, float src_x,
 }
 
 SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height,
-                                    int pos) {
+                                    int_tuple_t img_pos) {
   SDL_Surface *dst = SDL_CreateSurface(width, height, SDL_PIXELFORMAT_ARGB8888);
 
   SDL_LockSurface(src);
@@ -99,17 +99,19 @@ SDL_Surface *scale_surface_bilinear(SDL_Surface *src, int width, int height,
   char *userPath = getenv("HOME"); // MacOS
   char *path;
 
-  assert(asprintf(&path, "%s/.cache/ssiv/%s", userPath, base_path));
+  assert(asprintf(&path, "%s/.cache/ssiv/%s", userPath,
+                  photos[img_pos.i].absolute_path));
   assert(SDL_CreateDirectory(path) == true);
-  assert(asprintf(&path, "%s%s%s%s", userPath, "/.cache/ssiv/", base_path,
-                  filenames[pos]) != 1);
+  assert(asprintf(&path, "%s%s%s%s", userPath, "/.cache/ssiv/",
+                  photos[img_pos.i].absolute_path,
+                  photos[img_pos.i].filenames[img_pos.k]) != 1);
   // IMG_SaveJPG(dst, path, 100);
 
   return dst;
 }
 
 SDL_Surface *scale_surface_stb(SDL_Surface *src, int width, int height,
-                               int pos) {
+                               int_tuple_t img_pos) {
 
   SDL_Surface *resized_src =
       SDL_CreateSurface(width, height, SDL_PIXELFORMAT_RGBA8888);
@@ -125,11 +127,39 @@ SDL_Surface *scale_surface_stb(SDL_Surface *src, int width, int height,
   char *userPath = getenv("HOME"); // MacOS
   char *path;
 
-  assert(asprintf(&path, "%s/.cache/ssiv/%s", userPath, base_path));
+  assert(asprintf(&path, "%s/.cache/ssiv/%s", userPath,
+                  photos[img_pos.i].absolute_path));
   assert(SDL_CreateDirectory(path) == true);
-  assert(asprintf(&path, "%s%s%s%s", userPath, "/.cache/ssiv/", base_path,
-                  filenames[pos]) != 1);
+  assert(asprintf(&path, "%s%s%s%s", userPath, "/.cache/ssiv/",
+                  photos[img_pos.i].absolute_path,
+                  photos[img_pos.i].filenames[img_pos.k]) != 1);
   IMG_SaveJPG(resized_src, path, 100);
 
   return resized_src;
+}
+
+int_tuple_t find_relative_pos(int cursor_pos) {
+  int total = 0;
+
+  for (int i = 0; i < pathcount; i++) {
+    // Calculate the end position of the current album
+    int end_of_album = total + photos[i].filenames_size;
+
+    // Check if cursor_pos is within this album
+    // Note: We use <= because if cursor_pos is 0, it's in the first photo of
+    // the first album
+    if (cursor_pos < end_of_album) {
+      int_tuple_t retval;
+      retval.i = i;                  // Album index
+      retval.k = cursor_pos - total; // Photo index (local to this album)
+      return retval;
+    }
+
+    // Move cursor start to the beginning of the next album
+    total = end_of_album;
+  }
+
+  // Handle error case (e.g., cursor_pos out of bounds)
+  int_tuple_t error_val = {-1, -1};
+  return error_val;
 }
