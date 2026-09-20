@@ -34,7 +34,7 @@ typedef struct {
   char **filenames;
   int filenames_size;
   int filenames_capacity;
-} photos_t;
+} photo_album_t;
 
 typedef struct {
   int i;
@@ -59,7 +59,7 @@ extern SDL_Surface **full_Surfaces;
 
 // File I/O
 
-extern photos_t *photos; // albums
+extern photo_album_t *photos; // albums
 extern int num_photos;
 extern char** paths;
 extern int pathcount;

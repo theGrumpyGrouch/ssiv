@@ -12,7 +12,7 @@ int original_height = 600;
 int original_width = 800;
 
 // File I/O
-photos_t *photos = NULL;
+photo_album_t *photos = NULL;
 char** paths = NULL;
 int pathcount = 0;
 int num_photos = 0;

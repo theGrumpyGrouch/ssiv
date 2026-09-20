@@ -35,7 +35,7 @@ void parse_options(int argc, char **argv) {
     pathcount--;
   }
 
-  photos = malloc(sizeof(photos_t) * pathcount);
+  photos = malloc(sizeof(photo_album_t) * pathcount);
 
   for (int i = 0; i < pathcount; i++) {
     photos[i].absolute_path = paths[i];

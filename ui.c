@@ -124,7 +124,7 @@ SDL_AppResult Draw_Image(void *appstate) {
   }
 
   int_tuple_t photo_loc = find_relative_pos(cursor_pos);
-  photos_t current_photo = photos[photo_loc.i];
+  photo_album_t current_photo = photos[photo_loc.i];
 
   int w, h;
   SDL_GetWindowSize(window, &w, &h);
@@ -193,7 +193,7 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
   }
 
   int_tuple_t photo_loc = find_relative_pos(cursor_pos);
-  photos_t current_photo = photos[photo_loc.i];
+  photo_album_t current_photo = photos[photo_loc.i];
 
   int w, h;
   SDL_GetWindowSize(window, &w, &h);
@@ -277,7 +277,7 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
 }
 SDL_AppResult Draw_StatusBar(void *appstate) {
   int_tuple_t photo_loc = find_relative_pos(cursor_pos);
-  photos_t current_photo = photos[photo_loc.i];
+  photo_album_t current_photo = photos[photo_loc.i];
 
   SDL_FRect status_rect;
 

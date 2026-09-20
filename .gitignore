@@ -1,3 +1,6 @@
+libs/
 test/
 *.tar
+*.txt
+todo.md
 ssiv
