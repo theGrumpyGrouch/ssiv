@@ -41,6 +41,14 @@ typedef struct {
   int k;
 } int_tuple_t;
 
+typedef struct { // Generic
+  const char* name;
+  int (*init)(void);
+  int (*do_action)(const char *arg);
+  void (*cleanup)(void);
+} ActionBackend;
+
+
 // Variables
 
 // SDL I/O
@@ -68,6 +76,9 @@ extern char last_path[4096];
 extern SDL_Color text_color;
 extern SDL_Texture *text_texture;
 
+/* Backend */
+extern ActionBackend feh_backend; 
+
 // MISC
 extern bool need_redraw;
 extern bool textures_generated;
@@ -76,6 +87,7 @@ extern int offset_pos;
 extern AppMode g_state;
 extern pthread_mutex_t mutex;
 extern pthread_cond_t cond;
+
 
 // Functions
 
@@ -109,3 +121,8 @@ int_tuple_t find_relative_pos(int cursor_pos);
 void print_usage();
 void print_version();
 void parse_options(int argc, char *argv[]);
+
+/* backend.c */
+int feh_init(void);
+int feh_set_wallpaper(const char*image_path);
+void feh_cleanup(void);

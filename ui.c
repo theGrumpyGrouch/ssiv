@@ -51,6 +51,14 @@ SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event) {
   SDL_Keycode key;
   int old_pos = cursor_pos;
 
+  int_tuple_t photo_loc = find_relative_pos(cursor_pos);
+  photo_album_t current_photo = photos[photo_loc.i];
+
+  char *path;
+  SDL_asprintf(&path, "%s%s", current_photo.absolute_path,
+               current_photo.filenames[photo_loc.k]);
+  assert(path != NULL);
+
   switch (event->type) {
   case SDL_EVENT_QUIT:
     return SDL_APP_SUCCESS;
@@ -67,8 +75,12 @@ SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event) {
       cursor_pos += 5;
     else if (key == SDLK_K)
       cursor_pos -= 5;
-    else if (key == SDLK_R) {
+    else if (key == SDLK_R)
       need_redraw = true;
+    else if (key == SDLK_M) {
+      if (feh_backend.init()) {
+        feh_backend.do_action(path);
+      }
     } else if (key == SDLK_RETURN)
       g_state = IMAGE;
     else if (key == SDLK_ESCAPE)
@@ -89,28 +101,6 @@ SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event) {
 
   return SDL_APP_CONTINUE;
 }
-
-// Given Cursor Pos find photo element it belongs to
-// int_tuple_t find_relative_pos(int cursor_pos) {
-//   int total = 0;
-//   int k = 0;
-//   while (total != cursor_pos) {
-//     for (int j = 0; j < photos[k].filenames_size; j++) {
-//       total += 1;
-//     }
-//     k++;
-//   }
-//   int_tuple_t retval;
-//   retval.i = k;
-//   retval.k = 0;
-//   for(int i = 0; i < k - 1; i++) {
-//     for(int j = 0; j < photos[i].filenames_size; j++) {
-//       retval.k += 1;
-//     }
-//   }
-//   retval.k = cursor_pos - retval.k;
-//   return retval;
-// }
 
 // Draw
 SDL_AppResult Draw_Image(void *appstate) {
@@ -136,7 +126,7 @@ SDL_AppResult Draw_Image(void *appstate) {
   viewport.w = original_width;
   viewport.h = original_height - 20;
 
-  SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_TRANSPARENT);
+  SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
   SDL_SetRenderViewport(renderer, &viewport);
   SDL_RenderClear(renderer);
 
@@ -205,7 +195,7 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
   viewport.x = 10;
   viewport.y = 10;
   viewport.w = original_width - 20;
-  viewport.h = original_height - 20; // Additional 20 for the bar
+  viewport.h = original_height - 20 - 20; // Additional 20 for the bar
 
   float cell_width = (float)(original_width - 20) / 5;
   float cell_height = (float)(original_height - 20) / 4;
