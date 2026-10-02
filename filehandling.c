@@ -1,7 +1,4 @@
 #include "ssiv.h"
-#include <SDL3/SDL_init.h>
-#include <SDL3/SDL_surface.h>
-#include <SDL3_image/SDL_image.h>
 #include <errno.h>
 #include <pthread.h>
 #include <sys/stat.h>

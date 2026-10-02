@@ -37,3 +37,11 @@ SDL_Texture **thumbnail_Textures = NULL;
 SDL_Surface **thumbnail_Surfaces = NULL;
 SDL_Texture **full_Textures = NULL;
 SDL_Surface **full_Surfaces = NULL;
+
+// Backend
+ActionBackend feh_backend = {
+  .name = "feh",
+  .init = feh_init,
+  .do_action = feh_set_wallpaper,
+  .cleanup = feh_cleanup
+};
