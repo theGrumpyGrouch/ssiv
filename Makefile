@@ -15,7 +15,9 @@ tar:
 	tar -cf ssiv.tar *.c *.h libs Makefile
 clean:
 	rm -f $(TARGET)
-install:
-	make && sudo mv ssiv /usr/bin/ssiv
+install: all	
+	mv ssiv /usr/bin/ssiv
+uninstall:
+	rm /usr/bin/ssiv
 
-.PHONY: all clean tar
+.PHONY: all clean tar install

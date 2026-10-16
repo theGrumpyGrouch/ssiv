@@ -131,7 +131,6 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
-  // TODO Destroy textures
   for (int i = 0; i < num_photos; ++i) {
     SDL_DestroyTexture(thumbnail_Textures[i]);
     SDL_DestroyTexture(full_Textures[i]);
