@@ -42,3 +42,5 @@ ssiv is built using the following commands:
 ```
 
 NOTE: The default path is /usr/bin/ssiv.
+
+&copy; theGrumpyGrouch 2026
