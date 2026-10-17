@@ -1,4 +1,4 @@
-![sxiv](logo.png "ssiv")
+<img src="logo.png" alt="logo" width="200">
 
 **Simple SDL Image Viewer**
 
@@ -14,15 +14,23 @@ Features
 
 Screenshots
 -----------
+***Thumbnailer Gallery Mode***: 
+<br>
+<img src="screenshots/example1.png" alt="example1 " width="540">
+<br>
+***Image Mode***:
+<br>
+<img src="screenshots/example2.png" alt="example2 " width="540">
 
 Dependencies
 ------------
 
 ssiv requires the following to be installed:
+```
     * sdl3
     * sdl3_image
     * sdl3_TTF
-    * stb_image_resize
+```
 
 Building
 --------
