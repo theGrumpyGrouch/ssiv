@@ -2,7 +2,7 @@
 
 **Simple SDL Image Viewer**
 
-The purpose of this ssiv is to be the perfect image for me, much like how the purpose of its predecessor project sxiv is for its creator.
+This project draws inspiration from sxiv, and in that spirit, ssiv is meant to be the perfect image viewer for its creator (me).
 
 Features
 --------
@@ -42,3 +42,5 @@ ssiv is built using the following commands:
 ```
 
 NOTE: The default path is /usr/bin/ssiv.
+
+&copy; theGrumpyGrouch 2026
