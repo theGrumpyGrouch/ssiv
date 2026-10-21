@@ -143,9 +143,17 @@ SCALE:
     return NULL;
   }
 
+  // Scalling Logic
   int new_width = ((float)(original_width - 20) / 5) - 8;
-  float ratio = (float)new_width / tmp->w;
-  int new_height = tmp->h * ratio;
+  int new_height = ((float)(original_height - 20 - 20) / 4) - 8;
+
+  if(tmp->w > tmp->h) {
+    float ratio = (float)new_width / tmp->w;
+    new_height = tmp->h * ratio;
+  } else {
+    float ratio = (float)new_height / tmp->h;
+    new_width = tmp->w * ratio;
+  }
 
   thumbnail_Surfaces[surface_pos] =
       scale_surface_stb(tmp, new_width, new_height, img_pos);

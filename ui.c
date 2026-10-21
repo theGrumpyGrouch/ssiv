@@ -124,7 +124,7 @@ SDL_AppResult Draw_Image(void *appstate) {
   viewport.x = 0;
   viewport.y = 0;
   viewport.w = original_width;
-  viewport.h = original_height - 20;
+  viewport.h = original_height; 
 
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
   SDL_SetRenderViewport(renderer, &viewport);
@@ -172,6 +172,11 @@ SDL_AppResult Draw_Image(void *appstate) {
   return SDL_APP_CONTINUE;
 }
 
+/* TODO: Position dictates what is rendered such that you will always be on the 
+* bottom row after crossing the first grid. We do not want this. Also, 
+* thumbnail cache predetermines the size of the images, so if we want to
+* dynamically expand the window we can not change the size the images take up 
+* just the amount present on screen. */
 SDL_AppResult Draw_Thumbnails(void *appstate) {
   if (!need_redraw) {
     // SDL_Event e;
@@ -194,11 +199,11 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
 
   viewport.x = 10;
   viewport.y = 10;
-  viewport.w = original_width - 20;
+  viewport.w = original_width - 20; // 20 for bar
   viewport.h = original_height - 20 - 20; // Additional 20 for the bar
 
   float cell_width = (float)(original_width - 20) / 5;
-  float cell_height = (float)(original_height - 20) / 4;
+  float cell_height = (float)(original_height - 20 - 20) / 4;
 
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, SDL_ALPHA_OPAQUE);
   SDL_RenderClear(renderer);
@@ -235,17 +240,21 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
       cell_rect.w = (int)cell_width;
       cell_rect.h = (int)cell_height;
 
+      // Scalling Occurs When Thumbnails Are Generated
       dst_rect.w = thumbnail_Textures[img_pos]->w;
       dst_rect.h = thumbnail_Textures[img_pos]->h;
 
-      // Scaling
-      // dst_rect.w = cell_rect.w - 8;
-      // float ratio = dst_rect.w / w;
-      // dst_rect.h = h * ratio;
-
       // Center the image in the cell
-      dst_rect.x = cell_rect.x + 4;
-      dst_rect.y = cell_rect.y + 4;
+      int x_c = cell_rect.w / 2;
+      int y_c = cell_rect.h / 2;
+      int dx_c = dst_rect.w / 2;
+      int dy_c = dst_rect.h / 2;
+      dst_rect.x = cell_rect.x + x_c - dx_c;
+      dst_rect.y = cell_rect.y + y_c - dy_c;
+
+      // cell_rect is now used as highlightor 
+      cell_rect.x = dst_rect.x - 4;
+      cell_rect.y = dst_rect.y - 4;
       cell_rect.w = dst_rect.w + 8;
       cell_rect.h = dst_rect.h + 8;
 
@@ -257,7 +266,6 @@ SDL_AppResult Draw_Thumbnails(void *appstate) {
                                SDL_ALPHA_TRANSPARENT);
       }
 
-      // Render the texture
       SDL_RenderTexture(renderer, thumbnail_Textures[img_pos], NULL, &dst_rect);
     }
   }
