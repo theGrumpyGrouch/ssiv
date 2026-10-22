@@ -8,7 +8,8 @@ Features
 --------
 
 * Thumbnail Mode: preview grid of selectable images
-* Ability to set the wallpaper using exchangeable backends
+* Customizable backend that will execute a cmd on highlighted image
+* Wallpaper backend provided to allow for wallpaper setting with feh
 * Vi bindings for movement
 * Caching for fast reloads
 
