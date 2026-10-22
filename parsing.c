@@ -1,6 +1,6 @@
 #include "ssiv.h"
 
-void print_usage() { printf("usage: ssiv [-thv] FILES ...\n"); }
+void print_usage() { printf("usage: ssiv [-thv] [-b CMD] FILES ...\n"); }
 void print_version() { printf("ssiv: version 0.0.1 \n"); }
 
 void parse_options(int argc, char **argv) {
@@ -10,7 +10,7 @@ void parse_options(int argc, char **argv) {
   const char *programe_name = strrchr(argv[0], '/');
   programe_name = programe_name ? programe_name + 1 : argv[0];
 
-  while ((opt = getopt(argc, argv, "t::h::v::")) != -1) {
+  while ((opt = getopt(argc, argv, "thvb:")) != -1) {
     switch (opt) {
     case '?':
       print_usage();
@@ -23,6 +23,9 @@ void parse_options(int argc, char **argv) {
       exit(EXIT_SUCCESS);
     case 't':
       g_state = THUMBNAILER;
+      break;
+    case 'b':
+      arg_backend.name = optarg;
       break;
     }
   }

@@ -45,3 +45,10 @@ ActionBackend feh_backend = {
   .do_action = feh_set_wallpaper,
   .cleanup = feh_cleanup
 };
+
+ActionBackend arg_backend = {
+  .name = "",
+  .init = NULL,
+  .do_action = arg_action,
+  .cleanup = feh_cleanup
+};

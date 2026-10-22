@@ -21,9 +21,11 @@
 #include <dirent.h>
 #include <math.h>
 #include <pthread.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 // Custom Type Definitions
 typedef enum { THUMBNAILER, IMAGE } AppMode;
@@ -42,12 +44,11 @@ typedef struct {
 } int_tuple_t;
 
 typedef struct { // Generic
-  const char* name;
+  const char *name;
   int (*init)(void);
   int (*do_action)(const char *arg);
   void (*cleanup)(void);
 } ActionBackend;
-
 
 // Variables
 
@@ -69,7 +70,7 @@ extern SDL_Surface **full_Surfaces;
 
 extern photo_album_t *photos; // albums
 extern int num_photos;
-extern char** paths;
+extern char **paths;
 extern int pathcount;
 extern char last_path[4096];
 
@@ -77,7 +78,8 @@ extern SDL_Color text_color;
 extern SDL_Texture *text_texture;
 
 /* Backend */
-extern ActionBackend feh_backend; 
+extern ActionBackend feh_backend;
+extern ActionBackend arg_backend;
 
 // MISC
 extern bool need_redraw;
@@ -87,7 +89,6 @@ extern int offset_pos;
 extern AppMode g_state;
 extern pthread_mutex_t mutex;
 extern pthread_cond_t cond;
-
 
 // Functions
 
@@ -123,6 +124,8 @@ void print_version();
 void parse_options(int argc, char *argv[]);
 
 /* backend.c */
+int is_binary_available_posix(const char *binary_name);
 int feh_init(void);
-int feh_set_wallpaper(const char*image_path);
+int feh_set_wallpaper(const char *image_path);
 void feh_cleanup(void);
+int arg_action(const char *image_path);

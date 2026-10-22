@@ -77,7 +77,9 @@ SDL_AppResult thumbnailer_AppEvent(void **appstate, SDL_Event *event) {
       cursor_pos -= 5;
     else if (key == SDLK_R)
       need_redraw = true;
-    else if (key == SDLK_M) {
+    else if (key == SDLK_N) {
+      arg_backend.do_action(path);
+    } else if (key == SDLK_M) {
       if (feh_backend.init()) {
         feh_backend.do_action(path);
       }

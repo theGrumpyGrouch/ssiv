@@ -1,4 +1,5 @@
 #include "ssiv.h"
+#include <SDL3/SDL_stdinc.h>
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   SDL_AppResult retval = SDL_APP_CONTINUE;
@@ -30,9 +31,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  // font = TTF_OpenFont("/Library/Fonts/Arial Unicode.ttf", 12.0f);
-  font =
-      TTF_OpenFont("/usr/share/fonts/Adwaita/AdwaitaMono-Regular.ttf", 12.0f);
+  const char *homedir = getpwuid(getuid())->pw_dir;
+  char *font_path = NULL;
+  SDL_asprintf(&font_path,
+               "%s/.local/share/fonts/ibmplexmono/IBMPlexMono-Regular.ttf",
+               homedir);
+  if (font_path == NULL) {
+    SDL_Log("Couldn't initialize font: %s\n", SDL_GetError());
+    return SDL_APP_FAILURE;
+  }
+
+  font = TTF_OpenFont(font_path, 14.0f);
+
   if (!font) {
     SDL_Log("Couldn't Open Font: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
@@ -60,11 +70,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
   Draw_StatusBar(appstate);
   SDL_RenderPresent(renderer);
 
-  int surfaces_size = 0; // TODO Get rid of surfaces size
+  num_photos = 0;
   for (int h = 0; h < pathcount; h++) {
-    surfaces_size += photos[h].filenames_size;
+    num_photos += photos[h].filenames_size;
   }
-  num_photos = surfaces_size;
 
   thumbnail_Textures = malloc(num_photos * sizeof(SDL_Texture *));
   if (!thumbnail_Textures) {
@@ -137,7 +146,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
   }
 
   for (int i = 0; i < pathcount; i++) {
-    for(int j = 0; j < photos[i].filenames_size; j++){
+    for (int j = 0; j < photos[i].filenames_size; j++) {
       free(photos[i].filenames[j]);
     }
   }
