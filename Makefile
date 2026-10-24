@@ -15,13 +15,12 @@ tar:
 	tar -cf ssiv.tar *.c *.h libs Makefile
 clean:
 	rm -f $(TARGET)
-font:
-	cp -r fonts/ibmplexmono ${HOME}/.local/share/fonts/
 install: all
+	cp -r fonts/ibmplexmono /usr/share/fonts/
 	mv ssiv /usr/bin/ssiv
 uninstall:
 	rm -r ~/.cache/ssiv
 	rm -r ~/.local/share/fonts/ibmplexmono
 	rm /usr/bin/ssiv
 
-.PHONY: all clean tar font install uninstall
+.PHONY: all clean tar install uninstall

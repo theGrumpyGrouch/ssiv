@@ -31,16 +31,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
-  const char *homedir = getpwuid(getuid())->pw_dir;
-  char *font_path = NULL;
-  SDL_asprintf(&font_path,
-               "%s/.local/share/fonts/ibmplexmono/IBMPlexMono-Regular.ttf",
-               homedir);
-  if (font_path == NULL) {
-    SDL_Log("Couldn't initialize font: %s\n", SDL_GetError());
-    return SDL_APP_FAILURE;
-  }
-
+  char *font_path = "/usr/share/fonts/ibmplexmono/IBMPlexMono-Regular.ttf";
   font = TTF_OpenFont(font_path, 14.0f);
 
   if (!font) {
@@ -50,13 +41,16 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 
   text = TTF_RenderText_Blended(font, argv[1], 0,
                                 text_color); // Why base path here?
-  if (text) {
-    text_texture = SDL_CreateTextureFromSurface(renderer, text);
-    SDL_DestroySurface(text);
+
+  if (!text) {
+    SDL_Log("Couldn't create text: %s\n", SDL_GetError());
+    return SDL_APP_FAILURE;
   }
+  text_texture = SDL_CreateTextureFromSurface(renderer, text);
+  SDL_DestroySurface(text);
 
   if (!text_texture) {
-    SDL_Log("Couldn't create text: %s\n", SDL_GetError());
+    SDL_Log("Couldn't create text texture: %s\n", SDL_GetError());
     return SDL_APP_FAILURE;
   }
 

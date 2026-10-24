@@ -1,4 +1,5 @@
 #include "ssiv.h"
+#include <stdlib.h>
 
 void print_usage() { printf("usage: ssiv [-thv] [-b CMD] FILES ...\n"); }
 void print_version() { printf("ssiv: version 0.0.1 \n"); }
@@ -36,6 +37,11 @@ void parse_options(int argc, char **argv) {
   if (pathcount == 1 && (strcmp(paths[0], "-") == 0)) {
     paths++;
     pathcount--;
+  }
+
+  if (pathcount < 1) {
+      print_usage();
+      exit(EXIT_FAILURE);
   }
 
   photos = malloc(sizeof(photo_album_t) * pathcount);
